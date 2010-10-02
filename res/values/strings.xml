@@ -13,4 +13,5 @@
         <item>Printer 4</item>
         <item>Printer 5</item>
     </string-array>
+<string name="connection_menuitem">Connection</string>
 </resources>
