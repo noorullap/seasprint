@@ -36,10 +36,12 @@ public class EngineeringPrinter extends Activity {
 	public static final String HOST_KEY = "host";
 	public static final String PORT_FAIL = "22";
 	public static final String PORT_KEY = "port";
+	public static final String KEY_KEY = "privatekey";
 	public static final String SAVED = "saved";
 	public static String user;
 	public static String password;
 	public static String host;
+	public static String privatekey;
 	public static int port;
 	public static Connection connect = null;
 	public static FileUpload.Future upload;
@@ -66,18 +68,18 @@ public class EngineeringPrinter extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-      InputStream is = null;
-      try {
-          is = getContentResolver().openInputStream(getIntent().getData());
-      }
-      catch  (FileNotFoundException fnf){
-          Log.e("Connection","File Not Found");
-      }
-      Document.load(is);
-      Document.setDescriptor(getIntent().getData());
-        Microsoft = MicrosoftSink.Filter(getIntent().getType());
-        type = getIntent().getType();
-        
+//      InputStream is = null;
+//      try {
+//          is = getContentResolver().openInputStream(getIntent().getData());
+//      }
+//      catch  (FileNotFoundException fnf){
+//          Log.e("Connection","File Not Found");
+//      }
+//      Document.load(is);
+//      Document.setDescriptor(getIntent().getData());
+//        Microsoft = MicrosoftSink.Filter(getIntent().getType());
+//        type = getIntent().getType();
+//        
         eb = new ErrorCallback(this);
         
     }
@@ -112,8 +114,11 @@ public class EngineeringPrinter extends Activity {
         }*/
         
         final SharedPreferences pref = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        if (pref.contains(PASSWORD_KEY)) {
+        	pref.edit().remove(PASSWORD_KEY).commit();
+        }
         user = pref.getString(USER_KEY, USER_FAIL);
-        password = decryptPassword(pref.getString(PASSWORD_KEY, PASSWORD_FAIL));
+        //password = decryptPassword(pref.getString(PASSWORD_KEY, PASSWORD_FAIL));
         host = pref.getString(HOST_KEY, HOST_FAIL);
         String portStr = pref.getString(PORT_KEY, PORT_FAIL);
         
@@ -130,7 +135,7 @@ public class EngineeringPrinter extends Activity {
         final EditText portname = (EditText) findViewById(R.id.portname);
         
         usertext.setText(user);
-        passtext.setText(password);
+        passtext.setText("");
         hostname.setText(host);
         portname.setText(portStr);
         
@@ -158,16 +163,16 @@ public class EngineeringPrinter extends Activity {
 	                			             
 	                	ConnectionFactory cf = new ConnectionFactory();
 	                	Log.e("user",user);
-	                	Log.e("password",password);
 	                	Log.e("host",host);
 	                	Log.e("port",((Integer)(port)).toString());
-	                	connect = cf.MakeConnection(user, password, host, port);
+	                	String key = (new AuthSetup(user, password, host, port)).keyGen();
+	                	connect = cf.MakeConnectionKey(user, key, host, port);
                         final SharedPreferences pref1 = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 	                	final Editor edit = pref1.edit();
 	                	if(checkBox.isChecked())
 	                	{
 		                	edit.putString(USER_KEY, user);
-		                	edit.putString(PASSWORD_KEY, encryptPassword(password));
+		                	edit.putString(KEY_KEY, key);
 		                	edit.putString(HOST_KEY, host);
 		                	edit.putString(PORT_KEY, port+"");
 	                	}

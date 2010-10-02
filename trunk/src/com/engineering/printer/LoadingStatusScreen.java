@@ -35,6 +35,7 @@ public class LoadingStatusScreen extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.loadingstatus);
+        
     }
     
 	 public void onResume() {

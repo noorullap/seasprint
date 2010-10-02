@@ -1,5 +1,6 @@
 package com.engineering.printer;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
@@ -14,8 +15,12 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnCreateContextMenuListener;
 import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -44,12 +49,82 @@ public class PrinterSelectScreen extends Activity{
 	
 	//public static Integer pps;
 	
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater infl = new MenuInflater(this);
+		infl.inflate(R.menu.menu, menu);
+		return super.onCreateOptionsMenu(menu);
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// TODO Auto-generated method stub
+		if (item.getItemId() == R.id.connection_config) {
+       	 Intent myIntent = new Intent(this, EngineeringPrinter.class);
+         startActivityForResult(myIntent, 0);
+		return true;
+		}
+		return super.onOptionsItemSelected(item);
+		
+	}
+	
 	 public void onCreate(Bundle savedInstanceState) {
 	        super.onCreate(savedInstanceState);
+	        
+	        InputStream is = null;
+	        try {
+	        	if (null != getIntent().getData()) {
+		            is = getContentResolver().openInputStream(getIntent().getData());
+			        Document.load(is);
+			        Document.setDescriptor(getIntent().getData());
+			          EngineeringPrinter.Microsoft = MicrosoftSink.Filter(getIntent().getType());
+			          EngineeringPrinter.type = getIntent().getType();
+
+	        	}
+
+	        }
+	        catch  (FileNotFoundException fnf){
+	            Log.e("Connection","File Not Found");
+	        }
+
+	        
 	       SharedPreferences settings = getSharedPreferences(PRINTER_PREF, 0);
 	       mFavored = settings.getString(PRINTER_KEY, null);
 	       if (mFavored == null) {
 	           mFavored = "169";
+	       }
+	       
+	       SharedPreferences conn_set = getSharedPreferences(EngineeringPrinter.PREFS_NAME, MODE_PRIVATE);
+	        if (conn_set.contains(EngineeringPrinter.PASSWORD_KEY)) {
+	        	if (conn_set.contains(EngineeringPrinter.KEY_KEY) &&
+	 	    		conn_set.contains(EngineeringPrinter.HOST_KEY) &&
+		    		conn_set.contains(EngineeringPrinter.PORT_KEY)) {
+	        			String key = (new AuthSetup(conn_set.getString(EngineeringPrinter.USER_KEY, ""),
+	    			   conn_set.getString(EngineeringPrinter.PASSWORD_KEY, ""), 
+	    			   conn_set.getString(EngineeringPrinter.HOST_KEY, ""), 
+	    			   Integer.valueOf(conn_set.getString(EngineeringPrinter.PORT_KEY,EngineeringPrinter.PORT_FAIL)))).keyGen();
+	        			conn_set.edit().putString(EngineeringPrinter.KEY_KEY, key).commit();
+	        	}
+	        	conn_set.edit().remove(EngineeringPrinter.PASSWORD_KEY).commit();
+	        }
+	       if (!conn_set.contains(EngineeringPrinter.USER_KEY) ||
+	    		   !conn_set.contains(EngineeringPrinter.KEY_KEY) || 
+	    		   !conn_set.contains(EngineeringPrinter.HOST_KEY) ||
+	    		   !conn_set.contains(EngineeringPrinter.PORT_KEY)){
+	         	 Intent myIntent = new Intent(this, EngineeringPrinter.class);
+	             startActivityForResult(myIntent, 0);
+	       }
+	       else {
+	    	   try {
+	    	   EngineeringPrinter.connect = (new ConnectionFactory()).MakeConnectionKey(
+	    			   conn_set.getString(EngineeringPrinter.USER_KEY, ""),
+	    			   conn_set.getString(EngineeringPrinter.KEY_KEY, ""), 
+	    			   conn_set.getString(EngineeringPrinter.HOST_KEY, ""), 
+	    			   Integer.valueOf(conn_set.getString(EngineeringPrinter.PORT_KEY,EngineeringPrinter.PORT_FAIL)));
+	    	   }
+	    	   catch (IOException e) {
+		         	 Intent myIntent = new Intent(this, EngineeringPrinter.class);
+		             startActivityForResult(myIntent, 0);
+	    	   }
 	       }
 	 }
 	 
